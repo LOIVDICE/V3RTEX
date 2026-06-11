@@ -1,0 +1,142 @@
+Good question. Here is the complete list, organized by entity type, with the reason each field is needed.
+
+---
+
+## Category 1 — Functions
+
+This is the most data-dense entity. Functions are the primary nodes in the graph.
+
+**Identity fields:**
+- `name` — the function name as written in the source
+- `qualified_name` — the full dot-path name: `services.auth.verify_token`. Used as the unique node ID in the graph. Two functions can have the same name in different files — the qualified name is what makes them distinct.
+- `parent_class` — if this function is a method, which class it belongs to. Needed to distinguish `User.save()` from `Database.save()`.
+- `file_path` — which file this function lives in. Needed for the graph edge DEFINES (file → function) and for the directory clustering.
+
+**Position fields:**
+- `start_line` — line where the function definition begins. Needed for the "open in editor" feature (jump to this line) and for detecting nested functions.
+- `end_line` — line where the function ends. Combined with start_line gives the function's length, which feeds into the maintainability index.
+
+**Signature fields:**
+- `params` — list of parameter names. For Python, includes type annotations if present. Needed for the LLM summary in L3 and for the node detail sidebar display.
+- `return_type` — the return type annotation if present (`-> bool`, `-> str`). Needed for LLM summaries and for the visual code creation form in L4.
+- `is_async` — whether it is declared with `async def` (Python) or `async function` (JS). An async function has different call patterns and different complexity considerations.
+- `decorators` — list of decorator names applied to the function. Critical for entry point detection (`@app.get`, `@router.post`, `@property`, `@staticmethod`, `@abstractmethod`). A function decorated with `@app.get('/users')` is an API route — it has zero internal callers but is absolutely not dead code.
+
+**Content fields:**
+- `docstring` — the first string literal inside the function body if it exists. Used in L3 for LLM summaries and embedding.
+- `body_text` — first 30 lines of the function body. Not the full body for large functions. Used for embeddings in L3 and for the node detail sidebar.
+
+**Behavioral flags:**
+- `is_entry_point` — true if the function is decorated as an API route, CLI command, event handler, or is named `main` inside an `if __name__ == "__main__"` block. Entry points always have zero internal callers but must never be flagged as dead code.
+- `is_generator` — has `yield` statements. Generators behave differently from regular functions and the complexity counting treats them differently.
+- `is_dunder` — is a Python magic method (`__init__`, `__str__`, `__repr__`, `__len__`, etc.). Dunder methods are always called by the Python runtime rather than by your code directly — they should not be flagged as dead code even with zero explicit callers.
+- `is_test` — function name matches test patterns (`test_*`, `*_test`, `spec_*`). Test functions are called by the test runner, not by your code. Should not be flagged dead.
+- `is_property` — decorated with `@property`. Property getters look like zero-argument functions but behave as attribute access.
+
+**For JavaScript specifically:**
+- `is_exported` — whether the function has `export` or `export default`. Exported functions are the public API of a JS module.
+- `is_react_component` — function name starts with a capital letter and returns JSX. React components have a specific role in the architecture.
+- `is_hook` — function name starts with `use` (React convention). Hooks have specific call rules.
+- `is_arrow_function` — `const fn = () => {}` vs `function fn() {}`. Affects how `this` binding works and how the function is detected in the AST.
+
+---
+
+## Category 2 — Classes
+
+- `name` — class name
+- `qualified_name` — `services.auth.UserService` — unique node ID
+- `file_path` — which file it lives in
+- `base_classes` — list of parent class names. Each one becomes an INHERITS edge in the graph. Needed for inheritance chain analysis and for detecting that a subclass depends on its parent.
+- `start_line` / `end_line` — position in file
+- `decorators` — class-level decorators (`@dataclass`, `@Model`, `@Injectable` etc.)
+- `docstring` — class-level docstring if present
+- `methods` — list of method names inside the class. These get extracted individually as FUNCTION entities with `parent_class` set.
+
+---
+
+## Category 3 — Import Statements
+
+Imports are what become the IMPORTS edges in the graph — the connections between files. This is the most varied category because Python and JavaScript handle imports very differently.
+
+**For Python — extract:**
+- `module` — the module being imported. From `from services.auth import verify_token` this is `services.auth`.
+- `symbols` — list of names being imported. From the same example: `["verify_token"]`.
+- `alias` — if the import uses `as`, what alias it is given. `import numpy as np` → alias is `np`. Needed because later call expressions may use `np.array()` not `numpy.array()`.
+- `is_relative` — whether it uses dots for relative imports (`from . import utils` or `from ..models import User`). Relative imports require different resolution logic.
+- `is_star` — `from module import *`. Cannot resolve which specific symbols are pulled in. Flagged as STAR_IMPORT — we know there is a dependency but not on what specific names.
+- `is_conditional` — the import is inside a `try/except ImportError` block. This is a dependency that may or may not exist at runtime.
+- `is_dynamic` — the import uses `importlib.import_module()` or `__import__()`. Cannot be resolved statically. Flagged as DYNAMIC.
+- `line_number` — where the import is in the file. Useful for showing location in the sidebar.
+
+**For JavaScript/TypeScript — extract:**
+- `module_specifier` — the string in quotes: `'react'`, `'./services/auth'`, `'../utils'`
+- `default_import` — `import React from 'react'` → default import is `React`
+- `named_imports` — `import { useState, useEffect } from 'react'` → named imports are `["useState", "useEffect"]`
+- `namespace_import` — `import * as utils from './utils'` → namespace is `utils`
+- `is_type_only` — TypeScript: `import type { User } from './types'`. Type imports are erased at compile time — they create a conceptual dependency but not a runtime one.
+- `is_require` — CommonJS: `const x = require('./module')`. Older Node.js pattern.
+- `is_dynamic` — `import('./module').then(...)`. Dynamic import, cannot resolve statically at the time of call.
+- `is_relative` — starts with `./` or `../`. Relative imports are within the project; bare module names (like `react`) are external packages.
+
+---
+
+## Category 4 — Call Expressions
+
+These are the most granular extraction and they become the CALLS edges in the graph — which functions call which other functions.
+
+**Extract from inside every function body:**
+- `callee_name` — the name of what is being called. This is the tricky part. Three forms:
+  - Simple: `verify_token(...)` → callee is `verify_token`
+  - Attribute: `jwt.decode(...)` → callee is `jwt.decode`. The `jwt` part might be an imported module alias.
+  - Method on self: `self.save(...)` → callee is the method `save` on whatever class `self` refers to.
+  - Chained: `app.router.get(...)` → callee is the full chain.
+- `line_number` — where in the function the call happens. Useful for debugging and for mapping calls back to specific lines.
+- `is_inside_try_block` — whether this call is wrapped in a try/except. Relevant for understanding error handling patterns.
+- `is_inside_conditional` — whether the call only happens under certain conditions. A function that is called inside an `if feature_flag_enabled:` block is a conditional caller — less certain than an unconditional one.
+
+**What you do NOT need from call expressions:**
+- The arguments passed. You do not need the values of the arguments to build the graph. The graph only cares that A called B, not what A passed to B.
+- The return value handling. Not needed for graph construction.
+
+---
+
+## Category 5 — Module-Level Variables
+
+These become VARIABLE nodes in the graph. Lower priority than functions and classes but useful for detecting configuration constants and module-level state.
+
+- `name` — variable name
+- `value_type` — what kind of value it holds: string, integer, boolean, list, dict, None, or complex expression
+- `is_constant` — by convention, ALL_CAPS names are constants in Python
+- `has_type_annotation` — `SECRET_KEY: str = "..."` — the type is explicitly declared
+- `line_number` — position in file
+
+**What to skip:** local variables inside functions. Those are not graph nodes. Only extract variables defined at the module level (top of the file, outside any function or class).
+
+---
+
+## Category 6 — File-Level Metadata
+
+Not from the AST itself but extracted alongside the AST parse. Every file node in the graph needs this.
+
+- `total_line_count` — total lines in the file including blank lines and comments
+- `source_line_count` — lines that are actual code (excluding blanks and comments). Radon gives this via `radon.raw.analyze()`
+- `comment_line_count` — number of comment lines. A file with zero comments and 500 lines is worth flagging.
+- `encoding` — detected file encoding. Files that are not UTF-8 need special handling in the parser.
+- `has_syntax_errors` — Tree-sitter is error-tolerant and will parse files with syntax errors, but it inserts ERROR nodes in the tree. Track whether this happened and log it.
+- `language` — `python`, `javascript`, `typescript`, `tsx`, `jsx` — detected from file extension.
+
+---
+
+## What You Do NOT Extract
+
+For completeness — things that are in the AST but V3RTEX deliberately ignores at L1:
+
+- **Function argument values** — not needed for graph edges
+- **String literals** — except docstrings
+- **Number/boolean literals** — not needed
+- **Comment text** — not needed (comment count is tracked but not the content)
+- **Type annotation details** — captured as strings, not parsed into type graphs
+- **Conditional expression values** — the conditions inside if-statements are not extracted, only the fact that they exist (for complexity counting)
+- **Exception types** in except clauses — noted as decision points for complexity but not extracted as named entities
+
+---
