@@ -47,16 +47,16 @@ def main():
                 target   = node.metadata.get("target_file_path", "?")
                 resolved = symbol_map.get_symbols(node.id)
                 symbols  = ", ".join(resolved.keys()) if resolved else "—"
-                print(f"  [{status}]    IMPORT {count}: {node.text}")
-                print(f"               -> {target}  [{symbols}]")
+                # print(f"  [{status}]    IMPORT {count}: {node.text}")
+                # print(f"               -> {target}  [{symbols}]")
 
             elif status == "EXTERNAL":
                 total_external += 1
-                print(f"  [{status}]    IMPORT {count}: {node.text}")
+                # print(f"  [{status}]    IMPORT {count}: {node.text}")
 
             else:
                 total_unresolved += 1
-                print(f"  [UNRESOLVED]  IMPORT {count}: {node.text}")
+                # print(f"  [UNRESOLVED]  IMPORT {count}: {node.text}")
 
     print(f"\n  TOTAL : {count}  |  INTERNAL : {total_internal}  |  EXTERNAL : {total_external}  |  UNRESOLVED : {total_unresolved}")
     print(f"\nSYMBOL MAP: {len(symbol_map)} entries")
@@ -67,7 +67,7 @@ def main():
 
     print("\nCALL GRAPH:")
     #call_resolver.print_call_graph(call_graph)
-    call_resolver.print_sorted_graph(call_graph)
+    # call_resolver.print_sorted_graph(call_graph)
     print(f"\nCALL GRAPH: {len(call_graph)} edges")
 
     # Stage 5 — persist everything to SQLite

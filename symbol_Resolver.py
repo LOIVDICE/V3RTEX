@@ -393,6 +393,24 @@ class SymbolResolver:
                         # Symbol exists in source but cannot be traced to a definition
                         symbol_map.add(imp_node.id, sym_name, None)
 
+    def _module_anchor_node_id(self, rel_path: str) -> Optional[str]:
+        """Return a node id in rel_path to anchor a submodule/module import."""
+        sym_map = self._file_symbols.get(rel_path, {})
+        if sym_map:
+            return next(iter(sym_map.values()))
+
+        file_obj = self._files.get(rel_path)
+        if not file_obj:
+            return None
+
+        importable = {'functions', 'classes', 'variables', 'types', 'interfaces'}
+        for node in file_obj.nodes:
+            if node.category in importable and node.name:
+                if node.category == 'variables' and not node.metadata.get('is_module_level'):
+                    continue
+                return node.id
+        return None
+
     def _try_as_submodule(self, sym_name: str, target_path: str) -> Optional[str]:
         """
         Handles the Python pattern  'from . import auth'  where 'auth' is not a
@@ -406,12 +424,12 @@ class SymbolResolver:
         package_dir = target_path[: -len('/__init__.py')]
         candidate   = f"{package_dir}/{sym_name}.py"
         if candidate in self._files:
-            return self._files[candidate].id
+            return self._module_anchor_node_id(candidate)
 
         # Also try it as a sub-package
         sub_init = f"{package_dir}/{sym_name}/__init__.py"
         if sub_init in self._files:
-            return self._files[sub_init].id
+            return self._module_anchor_node_id(sub_init)
 
         return None
 
