@@ -1,0 +1,9 @@
+1- Do not modify the L1 dir, it is a stable version.
+Run L1 : 
+- start the analysis engine : python main.py
+- start the http server : python server.py
+
+Outside the L1 is where development takes place. Stable and functioning code starts here and is completed before migration to L1
+Run The app : 
+- start the analysis engine : python main.py
+- start the http server : python server.py
