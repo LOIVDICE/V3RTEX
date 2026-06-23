@@ -23,6 +23,8 @@ import re
 import os
 from typing import Dict, List, Optional, Tuple
 from compBlocs12 import File, Node, SymbolMap, CallEdge, CallGraph
+from py_builtins import EXCEPTIONS
+from type_annotations import parse_param_types, core_type_name
 
 
 class CallResolver:
@@ -59,7 +61,7 @@ class CallResolver:
         "isNaN", "isFinite", "encodeURIComponent", "decodeURIComponent",
         "fetch", "require", "Error", "Symbol", "Map", "Set", "WeakMap",
         "WeakSet", "Proxy", "Reflect",
-    }
+    } | EXCEPTIONS   # (A) built-in exceptions count as EXTERNAL, not UNRESOLVED
 
     def __init__(self, files: List[File], symbol_map: SymbolMap):
         """
@@ -521,6 +523,23 @@ class CallResolver:
 
         return result
 
+    def _descendant_variables(self, fn_node: Node) -> List[Node]:
+        """
+        Every `variables` node inside a function body — including assignments
+        nested in try / if / for / with blocks — but stopping at any nested
+        function, method or class, which owns a separate scope.
+        """
+        out:   List[Node] = []
+        stack: List[Node] = list(fn_node.children)
+        while stack:
+            node = stack.pop()
+            if node.category in ("functions", "methods", "classes"):
+                continue                      # do not cross into a nested scope
+            if node.category == "variables":
+                out.append(node)
+            stack.extend(node.children)
+        return out
+
     def _build_local_scope(
         self,
         fn_node:        Node,
@@ -550,9 +569,7 @@ class CallResolver:
             if init_node:
                 param_types = self._parse_param_types(init_node)
 
-                for var in init_node.children:
-                    if var.category != "variables":
-                        continue
+                for var in self._descendant_variables(init_node):
                     if not var.name or not var.name.startswith("self."):
                         continue
 
@@ -567,23 +584,69 @@ class CallResolver:
                     # Case B: self.attr = param  where param has a type annotation
                     rhs = var.text.split("=", 1)[1].strip() if "=" in var.text else ""
                     rhs_name = rhs.split("(")[0].strip()
-                    type_name = param_types.get(rhs_name)
+                    type_name = core_type_name(param_types.get(rhs_name))
                     if type_name:
-                        cls = self._lookup_class_by_name(type_name, import_aliases, rel)
+                        cls = self._class_node(type_name, import_aliases, rel)
                         if cls:
                             scope[f"self.{attr}"] = cls
 
-        # ── local variables: p = SomeClass(...) ──────────────────────────
-        for var in fn_node.children:
-            if var.category != "variables":
+        # ── (B) this function's own annotated parameters ──────────────────
+        # def f(card: Card)  →  scope["card"] = Card node, so card.method()
+        # resolves to a project definition.
+        for pname, ann in self._parse_param_types(fn_node).items():
+            core = core_type_name(ann)
+            if not core:
                 continue
+            cls = self._class_node(core, import_aliases, rel)
+            if cls:
+                scope.setdefault(pname, cls)
+
+        # ── local variables: p = SomeClass(...)  /  x = make_thing() ──────
+        # Walks the whole body so assignments nested in try/if/for/with blocks
+        # are seen, not just statements directly under the function.
+        for var in self._descendant_variables(fn_node):
             if not var.name or var.name.startswith("self."):
                 continue
+            # Case A: x = SomeClass(...)
             cls = self._extract_constructor_type(var.text, import_aliases, rel)
+            # Case C: x = project_fn(...)  → type x by project_fn's return type
+            if not cls:
+                cls = self._type_from_return(var.text, import_aliases, rel)
             if cls:
                 scope[var.name] = cls
 
         return scope
+
+    def _type_from_return(
+        self,
+        var_text:       str,
+        import_aliases: Dict[str, dict],
+        file_rel_path:  str,
+    ) -> Optional[Node]:
+        """
+        (C) Type a variable assigned from a project function call by reading
+        that function's return-type annotation.
+
+            game_state = get_game(game_id)     # get_game -> Optional[GameState]
+            => GameState class Node
+
+        Only simple, unqualified callees are handled (foo(), not obj.foo());
+        return types that are containers or unions resolve to None.
+        """
+        if "=" not in var_text or "(" not in var_text:
+            return None
+        rhs    = var_text.split("=", 1)[1].strip()
+        callee = rhs.split("(")[0].strip()
+        if not callee or "." in callee:
+            return None
+
+        fn_node = self._lookup_class_by_name(callee, import_aliases, file_rel_path)
+        if not fn_node:
+            return None
+        core = core_type_name(fn_node.metadata.get("return_type"))
+        if not core:
+            return None
+        return self._class_node(core, import_aliases, file_rel_path)
 
     def _find_enclosing_class(self, node: Node) -> Optional[Node]:
         """
@@ -600,22 +663,14 @@ class CallResolver:
     def _parse_param_types(self, fn_node: Node) -> Dict[str, str]:
         """
         Parse the parameter annotation string from fn_node.metadata["parameters"]
-        into  { param_name: type_name }.
+        into  { param_name: type_name }.  Thin adapter over the shared,
+        bracket-aware parser in type_annotations (handles the extractor's
+        raw "(... )" / multi-line form).
 
-        Input : "self, auth_service: AuthService, db: Database = None"
+        Input : "(self, auth_service: AuthService, db: Database = None)"
         Output: {"auth_service": "AuthService", "db": "Database"}
         """
-        raw    = fn_node.metadata.get("parameters", "")
-        result = {}
-        for part in raw.split(","):
-            part = part.strip().lstrip("*")   # handle *args / **kwargs
-            if ":" in part:
-                name, type_str = part.split(":", 1)
-                name      = name.strip()
-                type_name = type_str.split("=")[0].strip()  # drop default value
-                if name and name not in ("self", "cls") and type_name:
-                    result[name] = type_name
-        return result
+        return parse_param_types(fn_node.metadata.get("parameters", ""))
 
     def _extract_constructor_type(
         self,
@@ -634,7 +689,23 @@ class CallResolver:
         constructor = rhs.split("(")[0].strip()
         if not constructor:
             return None
-        return self._lookup_class_by_name(constructor, import_aliases, file_rel_path)
+        # Class-only: SomeClass(...) types a variable; a function call like
+        # get_player(...) is NOT a constructor and is handled by _type_from_return.
+        return self._class_node(constructor, import_aliases, file_rel_path)
+
+    def _class_node(
+        self,
+        name:           str,
+        import_aliases: Dict[str, dict],
+        file_rel_path:  str,
+    ) -> Optional[Node]:
+        """
+        Look up `name` and return it only when it is a class definition.
+        Guards type-inference (constructor / parameter / return-type) against
+        accidentally binding a variable to a same-named function or variable.
+        """
+        node = self._lookup_class_by_name(name, import_aliases, file_rel_path)
+        return node if node and node.category == "classes" else None
 
     def _lookup_class_by_name(
         self,

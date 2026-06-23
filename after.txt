@@ -1,0 +1,223 @@
+api\deps.py	get_current_user	payload.get("user_id")	78
+api\deps.py	get_optional_user	payload.get("user_id")	152
+api\routes\auth_routes.py	get_firebase_token	firebase_auth.create_custom_token(current_user.id).decode("utf-8")	530
+api\routes\matchmaking_routes.py	leave_queue	leave_queue_service(current_user.uid)	119
+config\settings.py	Settings.__init__	origin.strip()	92
+config\settings.py	Settings.__init__	self.FIREBASE_PRIVATE_KEY.replace('\\n', '\n')	59
+database\collections\games_db.py	cleanup_old_games	game_data.get("ended_at")	548
+database\collections\games_db.py	deserialize_game_state	game_data.get("active_suit")	146
+database\collections\games_db.py	deserialize_game_state	game_data.get("finished_players", [])	154
+database\collections\games_db.py	deserialize_game_state	game_data.get("kicked_players", [])	153
+database\collections\games_db.py	deserialize_game_state	game_data.get("player_usernames", {})	124
+database\collections\games_db.py	deserialize_game_state	game_data.get("winner_id")	152
+database\collections\games_db.py	deserialize_game_state	game_data["player_hands"].items()	113
+database\collections\games_db.py	get_active_games	games.append(deserialize_game_state(game_data))	464
+database\collections\games_db.py	get_game_summary	game_state.created_at.isoformat()	592
+database\collections\games_db.py	get_game_summary	game_state.ended_at.isoformat()	593
+database\collections\games_db.py	increment_player_timeout	game_state.player_timeout_counts.get(player_id, 0)	309
+database\collections\games_db.py	kick_player_from_game	game_state.kicked_players.append(player_id)	349
+database\collections\games_db.py	serialize_game_state	game_state.created_at.isoformat()	85
+database\collections\games_db.py	serialize_game_state	game_state.ended_at.isoformat()	86
+database\collections\games_db.py	serialize_game_state	game_state.player_hands.items()	60
+database\collections\games_db.py	serialize_game_state	game_state.turn_start_time.isoformat()	79
+database\collections\games_db.py	update_turn	turn_start_time.isoformat()	280
+database\collections\matchmaking_db.py	cleanup_expired_entries	cutoff_time.isoformat()	281
+database\collections\matchmaking_db.py	cleanup_expired_entries	entry.get('joined_at')	291
+database\collections\matchmaking_db.py	get_waiting_players	entry.get('joined_at')	148
+database\collections\matchmaking_db.py	get_waiting_players	results.sort(key=get_joined_at_datetime)	155
+database\collections\matchmaking_db.py	get_waiting_players.get_joined_at_datetime	entry.get('joined_at')	134
+database\collections\matchmaking_db.py	is_player_waiting	entry.get('status')	352
+database\collections\players_db.py	get_online_players	player_data.get('email_last_changed')	490
+database\collections\players_db.py	get_online_players	player_data.get('phone_last_changed')	493
+database\collections\players_db.py	get_online_players	player_data.pop('skill_percentage', None)	497
+database\collections\players_db.py	get_online_players	players.append(Player(**player_data))	499
+database\collections\players_db.py	get_player	player_data.items()	111
+database\collections\players_db.py	get_player_by_email	player_data.get('email_last_changed')	194
+database\collections\players_db.py	get_player_by_email	player_data.get('phone_last_changed')	197
+database\collections\players_db.py	get_player_by_email	player_data.get('uid')	188
+database\collections\players_db.py	get_player_by_email	player_data.items()	214
+database\collections\players_db.py	get_player_by_email	player_data.pop('skill_percentage', None)	201
+database\collections\players_db.py	get_player_by_phone	player_data.get('email_last_changed')	702
+database\collections\players_db.py	get_player_by_phone	player_data.get('phone_last_changed')	705
+database\collections\players_db.py	get_player_by_phone	player_data.pop('skill_percentage', None)	709
+database\collections\players_db.py	get_player_by_username	player_data.get('email_last_changed')	150
+database\collections\players_db.py	get_player_by_username	player_data.get('phone_last_changed')	153
+database\collections\players_db.py	get_player_by_username	player_data.pop('skill_percentage', None)	157
+database\collections\rooms_db.py	add_player_to_room	room.players.append(player_id)	192
+database\collections\rooms_db.py	create_room	room.created_at.isoformat()	112
+database\collections\rooms_db.py	create_room	room.ended_at.isoformat()	114
+database\collections\rooms_db.py	create_room	room.started_at.isoformat()	113
+database\collections\rooms_db.py	get_available_rooms	available_rooms.append(room)	385
+database\collections\rooms_db.py	get_available_rooms	room_data.get('created_at')	372
+database\collections\rooms_db.py	get_available_rooms	room_data.get('ended_at')	378
+database\collections\rooms_db.py	get_available_rooms	room_data.get('started_at')	375
+database\collections\rooms_db.py	get_room	room_data.get('created_at')	136
+database\collections\rooms_db.py	get_room	room_data.get('ended_at')	142
+database\collections\rooms_db.py	get_room	room_data.get('started_at')	139
+database\collections\rooms_db.py	get_rooms_by_status	room_data.get('created_at')	414
+database\collections\rooms_db.py	get_rooms_by_status	room_data.get('ended_at')	420
+database\collections\rooms_db.py	get_rooms_by_status	room_data.get('started_at')	417
+database\collections\rooms_db.py	get_rooms_by_status	rooms.append(GameRoom(**room_data))	423
+database\collections\rooms_db.py	remove_player_from_room	room.players.remove(player_id)	244
+database\firebase_client.py	FirebaseClient.__new__	cls._instance._initialize()	47
+database\firebase_client.py	get_db	firebase_client.get_db()	266
+database\firebase_operations.py	create_document	db.collection(collection_name).document(document_id).set(data)	57
+database\firebase_operations.py	delete_document	db.collection(collection_name).document(document_id).delete()	160
+database\firebase_operations.py	document_exists	db.collection(collection_name).document(document_id).get()	252
+database\firebase_operations.py	get_document	db.collection(collection_name).document(document_id).get()	84
+database\firebase_operations.py	get_document	doc.to_dict()	87
+database\firebase_operations.py	increment_field	db.collection(collection_name).document(document_id).update({             field_name: firestore.Increment(increment_value)         })	288
+database\firebase_operations.py	query_collection	db.collection(collection_name)	207
+database\firebase_operations.py	query_collection	doc.to_dict()	226
+database\firebase_operations.py	query_collection	query.limit(limit)	221
+database\firebase_operations.py	query_collection	query.order_by(order_by, direction=direction)	217
+database\firebase_operations.py	query_collection	query.stream()	224
+database\firebase_operations.py	query_collection	query.where(filter=FieldFilter(field, operator, value))	212
+database\firebase_operations.py	update_document	db.collection(collection_name).document(document_id).set(data)	132
+database\firebase_operations.py	update_document	db.collection(collection_name).document(document_id).set(data, merge=True)	130
+main.py	add_process_time_header	call_next(request)	186
+main.py	validation_exception_handler	" -> ".join(str(loc) for loc in error["loc"])	202
+main.py	validation_exception_handler	errors.append({             "field": " -> ".join(str(loc) for loc in error["loc"]),             "message": error["msg"],             "type": error["type"]         })	201
+main.py	validation_exception_handler	exc.errors()	200
+models\card.py	Card.__str__	value_names.get(self.value, self.value)	227
+models\deck.py	Deck.to_dict	card.to_dict()	114
+models\game_room.py	GameRoom.add_player	self.players.append(player_id)	218
+models\game_room.py	GameRoom.get_room_info	self.created_at.isoformat()	359
+models\game_room.py	GameRoom.get_room_info	self.ended_at.isoformat()	361
+models\game_room.py	GameRoom.get_room_info	self.started_at.isoformat()	360
+models\game_room.py	GameRoom.remove_player	self.players.remove(player_id)	254
+models\game_state.py	GameState.get_active_players	active.append(player_id)	369
+models\game_state.py	GameState.get_active_players	self.player_hands[player_id].is_empty()	367
+models\game_state.py	GameState.kick_player	self.kicked_players.append(player_id)	335
+models\game_state.py	GameState.to_dict	card.to_dict()	483
+models\game_state.py	GameState.to_dict	hand.to_dict()	485
+models\game_state.py	GameState.to_dict	self.created_at.isoformat()	497
+models\game_state.py	GameState.to_dict	self.deck.to_dict()	482
+models\game_state.py	GameState.to_dict	self.ended_at.isoformat()	498
+models\game_state.py	GameState.to_dict	self.player_hands.items()	486
+models\game_state.py	GameState.to_dict	self.turn_start_time.isoformat()	491
+models\player.py	Player.to_internal_dict	self.email_last_changed.isoformat()	479
+models\player.py	Player.to_internal_dict	self.phone_last_changed.isoformat()	480
+models\player_hand.py	PlayerHand.to_dict	card.to_dict()	168
+procedures\deck_procedures.py	create_deck	cards.append(Card(suit=None, value=BLACK_JOKER))	63
+procedures\deck_procedures.py	create_deck	cards.append(Card(suit=None, value=RED_JOKER))	62
+procedures\deck_procedures.py	create_deck	cards.append(card)	59
+procedures\deck_procedures.py	deal_initial_cards	deck.cards.pop()	239
+procedures\deck_procedures.py	deal_initial_cards	hands[player_id].append(card)	240
+procedures\deck_procedures.py	draw_card	deck.cards.pop()	126
+procedures\deck_procedures.py	draw_first_tatami_card	deck.cards.extend(special_cards_drawn)	345
+procedures\deck_procedures.py	draw_first_tatami_card	deck.cards.extend(special_cards_drawn)	359
+procedures\deck_procedures.py	draw_first_tatami_card	special_cards_drawn.append(card)	370
+procedures\deck_procedures.py	draw_multiple_cards	deck.cards.pop()	174
+procedures\deck_procedures.py	draw_multiple_cards	drawn_cards.append(card)	175
+procedures\win_conditions.py	get_game_result	kicked_players.copy()	270
+procedures\win_conditions.py	get_player_rankings	active_players.append({             "player_id": player_id,             "cards_remaining": hand.card_count()         })	352
+procedures\win_conditions.py	get_player_rankings	active_players.sort(key=lambda p: p["cards_remaining"])	358
+procedures\win_conditions.py	get_player_rankings	hand.card_count()	354
+procedures\win_conditions.py	get_player_rankings	player_hands.items()	346
+procedures\win_conditions.py	get_player_rankings	player_hands[player_id].card_count()	376
+procedures\win_conditions.py	get_player_rankings	player_hands[winner_id].card_count()	340
+procedures\win_conditions.py	get_player_rankings	rankings.append({             "player_id": player_data["player_id"],             "rank": current_rank,             "cards_remaining": player_data["cards_remaining"],             "status": "active"         })	363
+procedures\win_conditions.py	get_player_rankings	rankings.append({             "player_id": player_id,             "rank": current_rank,             "cards_remaining": player_hands[player_id].card_count(),             "status": "kicked"         })	373
+procedures\win_conditions.py	get_player_rankings	rankings.append({         "player_id": winner_id,         "rank": 1,         "cards_remaining": player_hands[winner_id].card_count(),         "status": "winner"     })	337
+procedures\win_conditions.py	get_remaining_players	hand.is_empty()	177
+procedures\win_conditions.py	get_remaining_players	player_hands.items()	167
+procedures\win_conditions.py	get_remaining_players	remaining.append(player_id)	181
+procedures\win_conditions.py	is_game_over	hand.is_empty()	83
+procedures\win_conditions.py	is_game_over	player_hands.items()	80
+schemas\auth_schemas.py	RegisterRequest.validate_username	v.startswith('_')	63
+services\auth_service.py	login	error_data.get("error", {})	270
+services\auth_service.py	login	error_info.get("code", response.status_code)	272
+services\auth_service.py	login	error_info.get("message", "Unknown error")	271
+services\auth_service.py	login	firebase_auth.create_custom_token(user_id).decode("utf-8")	332
+services\auth_service.py	login	response.json()	269
+services\auth_service.py	login	response.json()	299
+services\auth_service.py	login	response_data.get("localId")	300
+services\auth_service.py	refresh_access_token	firebase_auth.create_custom_token(user_id).decode("utf-8")	425
+services\auth_service.py	refresh_access_token	token_data.get("expires_at")	418
+services\auth_service.py	register_player	firebase_auth.create_custom_token(user_id).decode("utf-8")	182
+services\background_matcher.py	start_background_matcher	_background_task.done()	152
+services\background_matcher.py	stop_background_matcher	_background_task.cancel()	168
+services\background_matcher.py	stop_background_matcher	_background_task.done()	167
+services\game_service.py	_advance_turn_skip_inactive	game_state.player_hands[game_state.get_current_player_id()].is_empty()	576
+services\game_service.py	_finalize_if_game_over	result.get("winner_id")	729
+services\game_service.py	draw_card_action	game_state.deck.is_empty()	379
+services\game_service.py	draw_card_action	game_state.player_hands.get(player_id)	346
+services\game_service.py	draw_card_action	player_hand.cards.append(drawn_card)	383
+services\game_service.py	draw_card_action	player_hand.cards.extend(drawn_cards)	360
+services\game_service.py	get_game_state_for_player	game_state.player_hands.get(other_player_id)	527
+services\game_service.py	get_game_state_for_player	game_state.player_hands.get(player_id)	500
+services\game_service.py	get_game_state_for_player	other_hand.card_count()	530
+services\game_service.py	get_game_state_for_player	state["players"].append({                 "player_id": other_player_id,                 "card_count": other_hand.card_count(),                 "is_kicked": game_state.is_player_kicked(other_player_id),                 "is_finished": other_player_id in game_state.finished_players,                 "timeout_count": game_state.get_player_timeout_count(other_player_id)             })	528
+services\game_service.py	handle_turn_timeout	game_state.deck.is_empty()	469
+services\game_service.py	handle_turn_timeout	game_state.player_hands.get(player_id)	467
+services\game_service.py	handle_turn_timeout	player_hand.cards.append(drawn_card)	473
+services\game_service.py	leave_game	game_state.player_order.index(player_id)	632
+services\game_service.py	leave_game	game_state.player_order.remove(player_id)	636
+services\game_service.py	play_card	card.get_penalty_value()	251
+services\game_service.py	play_card	card.is_penalty_card()	250
+services\game_service.py	play_card	card.is_skip_card()	257
+services\game_service.py	play_card	card.is_wild_card()	236
+services\game_service.py	play_card	card.is_wild_card()	262
+services\game_service.py	play_card	card.is_wild_card()	267
+services\game_service.py	play_card	game_state.finished_players.append(player_id)	275
+services\game_service.py	play_card	game_state.player_hands.get(player_id)	210
+services\game_service.py	play_card	game_state.tatami_pile.append(card)	243
+services\game_service.py	play_card	player_hand.card_count()	215
+services\game_service.py	play_card	player_hand.card_count()	216
+services\game_service.py	play_card	player_hand.cards.pop(card_index)	240
+services\game_service.py	play_card	player_hand.get_card_at_index(card_index)	219
+services\game_service.py	play_card	player_hand.is_empty()	272
+services\game_service.py	start_game_from_room	initial_hands.items()	135
+services\game_service.py	start_game_from_room	room.is_ready()	116
+services\matchmaking_service.py	check_and_create_matches	waiting.copy()	324
+services\matchmaking_service.py	cleanup_matched_entries	e.get('status')	504
+services\matchmaking_service.py	create_match	create_room_db(room)	412
+services\matchmaking_service.py	get_queue_status	entry.get('game_id')	273
+services\matchmaking_service.py	get_queue_status	entry.get('status')	256
+services\matchmaking_service.py	get_queue_status	entry.get('status')	265
+services\matchmaking_service.py	get_queue_status	entry.get('status', 'waiting')	278
+services\matchmaking_service.py	join_queue	entry.get('status')	99
+services\matchmaking_service.py	leave_queue	entry.get('status')	177
+services\player_service.py	list_online_players	player.to_public_dict()	446
+services\player_service.py	search_players_by_username	matches.append(public_profile)	499
+services\player_service.py	search_players_by_username	player_data.get('id')	495
+services\player_service.py	search_players_by_username	player_data.get('status')	497
+services\player_service.py	search_players_by_username	player_data.get('username', '')	491
+services\player_service.py	search_players_by_username	username.lower()	492
+services\player_service.py	search_players_by_username	username_query.lower()	488
+services\room_service.py	get_player_current_room_details	room_info.get('game_id')	451
+services\room_service.py	list_available_rooms	room.get_room_info()	413
+test.py	test_firebase_connection	db.collection('test_connection')	37
+test.py	test_firebase_connection	doc.to_dict()	55
+test.py	test_firebase_connection	test_collection.document(test_doc_id)	39
+test.py	test_firebase_connection	test_doc.delete()	62
+test.py	test_firebase_connection	test_doc.get()	52
+test.py	test_firebase_connection	test_doc.get()	65
+test.py	test_firebase_connection	test_doc.set(test_data)	47
+utils\jwt_utils.py	create_access_token	payload.update(additional_claims)	58
+utils\jwt_utils.py	create_refresh_token	payload.update(additional_claims)	104
+utils\jwt_utils.py	get_token_expiration	payload.get("exp")	263
+utils\jwt_utils.py	get_token_user_id	payload.get("user_id")	288
+utils\jwt_utils.py	verify_access_token	payload.get("type")	157
+utils\jwt_utils.py	verify_refresh_token	payload.get("type")	209
+utils\token_storage.py	cleanup_expired_tokens	token_data.get('expires_at')	339
+utils\token_storage.py	cleanup_expired_tokens	token_data.get('token_hash')	345
+utils\token_storage.py	get_refresh_token	token_data.get('created_at')	134
+utils\token_storage.py	get_refresh_token	token_data.get('expires_at')	132
+utils\token_storage.py	get_token_count_for_user	token_data.get('expires_at')	439
+utils\token_storage.py	get_token_count_for_user	token_data.get('revoked')	435
+utils\token_storage.py	get_user_active_tokens	active_tokens.append(token_data)	398
+utils\token_storage.py	get_user_active_tokens	token_data.get('created_at')	395
+utils\token_storage.py	get_user_active_tokens	token_data.get('expires_at')	388
+utils\token_storage.py	is_token_expired_in_db	token_data.get('expires_at')	185
+utils\token_storage.py	is_token_revoked	token_data.get('revoked', False)	160
+utils\token_storage.py	revoke_all_user_tokens	token_data.get('token_hash')	275
+utils\token_storage.py	revoke_refresh_token	token_data.get('user_id')	224
+utils\token_storage.py	store_refresh_token	expires_at.isoformat()	91
+utils\validation.py	is_safe_string	text.lower()	385
+utils\validation.py	sanitize_string	text.strip()	347
+utils\validation.py	validate_name	name.strip()	227
+utils\validation.py	validate_phone	digits_only.isdigit()	140
+utils\validation.py	validate_phone	phone.startswith('+')	135
+utils\validation.py	validate_username	username.startswith('_')	190
