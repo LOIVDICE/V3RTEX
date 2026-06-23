@@ -7,3 +7,5 @@ Outside the L1 is where development takes place. Stable and functioning code sta
 Run The app : 
 - start the analysis engine : python main.py
 - start the http server : python server.py
+
+The app starts on http://127.0.0.1:7331 (probably need to adjust the ip adress on backend depending on the lan setup)
