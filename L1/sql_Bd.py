@@ -304,6 +304,20 @@ class DatabaseManager:
         self.insert_symbol_map(symbol_map)
         self.insert_call_graph(call_graph)
 
+    # ── Clear database ──────────────────────────────────────────────────
+
+    def clear_database(self) -> None:
+        with self.get_connection() as conn:
+            conn.executescript("""
+                DELETE FROM directories;
+                DELETE FROM files;
+                DELETE FROM nodes;
+                DELETE FROM symbol_edges;
+                DELETE FROM sqlite_sequence;
+                DELETE FROM call_edges;
+            """)
+            conn.commit()
+
     # ── queries ───────────────────────────────────────────────────────────
 
     def get_directory(self, directory_id: str) -> dict:

@@ -77,6 +77,27 @@ def main():
     stats = db.stats()
     print(f"\nDATABASE: {stats}")
 
+def clear_database():
+    db = DatabaseManager("v3rtex.db")
+    db.clear_database()
+    print("Database cleared")
+
+def launch():
+
+    print("Welcome to the V3RTEX code analysis tool \nThis tool will analyze your PY or Js/Ts project")
+
+    loop = True
+    while loop:
+        print("Chose between the options below: \n 1. Analyze a Python project \n 2. Clear the database")
+        choice = input("Enter your choice (1 or 2): ")
+        if choice == "1":
+            main()
+        elif choice == "2":
+            clear_database()
+        else:
+            print("Invalid choice")
+            break
+    
 
 if __name__ == "__main__":
-    main()
+    launch()
